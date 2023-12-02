@@ -21,6 +21,35 @@ struct Set {
     blue: u32,
 }
 
+trait Power {
+    fn power(&self) -> u32;
+}
+
+impl Power for Vec<Set> {
+    fn power(&self) -> u32 {
+        use std::cmp::max;
+
+        let min_set = self.iter().fold(
+            Set {
+                ..Default::default()
+            },
+            |result, current| Set {
+                red: max(result.red, current.red),
+                green: max(result.green, current.green),
+                blue: max(result.blue, current.blue),
+            },
+        );
+
+        min_set.power()
+    }
+}
+
+impl Power for Set {
+    fn power(&self) -> u32 {
+        self.red * self.green * self.blue
+    }
+}
+
 fn main() {
     let lines = io::stdin()
         .lines()
@@ -29,20 +58,8 @@ fn main() {
 
     let result: u32 = lines
         .iter()
-        .map(|line| {
-            let (_, game) = parse_game(line).unwrap();
-
-            game
-        })
-        .filter(|game| {
-            for set in &game.sets {
-                if set.red > 12 || set.green > 13 || set.blue > 14 {
-                    return false;
-                }
-            }
-            true
-        })
-        .map(|game| game.id)
+        .map(|line| parse_game(line).unwrap().1)
+        .map(|game| game.sets.power())
         .sum();
 
     println!("{result}");
