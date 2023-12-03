@@ -1,4 +1,4 @@
-use std::io;
+use std::{collections::HashMap, io};
 
 fn main() {
     let schematic = io::stdin().lines().fold(Vec::new(), |mut result, line| {
@@ -8,38 +8,54 @@ fn main() {
     });
 
     let mut buffer: Vec<&char> = Vec::new();
-    let mut parts: Vec<String> = Vec::new();
-    let mut include: bool = false;
+    let mut ratios: HashMap<(usize, usize), Vec<String>> = HashMap::new();
+    let mut current_gear: Option<(usize, usize)> = None;
+
+    let mut add_ratio = |gear, value| {
+        match ratios.get_mut(&gear) {
+            Some(r) => r.push(value),
+            None => {
+                ratios.insert(gear, vec![value]);
+            }
+        };
+    };
 
     for (y, row) in schematic.iter().enumerate() {
         for (x, value) in row.iter().enumerate() {
             if value.is_numeric() {
                 buffer.push(value);
-                include = include || check_include(&schematic, (x, y));
+                current_gear = current_gear.or_else(|| get_connected_gear(&schematic, (x, y)));
             } else if buffer.len() > 0 {
-                if include {
-                    parts.push(buffer.iter().map(|v| v.to_string()).collect::<String>());
+                if let Some(gear) = current_gear {
+                    add_ratio(gear, buffer.clone().into_iter().collect());
                 }
 
                 buffer.clear();
-                include = false;
+                current_gear = None;
             }
         }
 
-        if include {
-            parts.push(buffer.iter().map(|v| v.to_string()).collect::<String>());
+        if let Some(gear) = current_gear {
+            add_ratio(gear, buffer.clone().into_iter().collect());
         }
 
         buffer.clear();
-        include = false;
+        current_gear = None;
     }
 
-    let result: u32 = parts.iter().map(|part| part.parse::<u32>().unwrap()).sum();
+    let result: u32 = ratios
+        .iter()
+        .filter(|(_, r)| r.len() == 2)
+        .map(|(_, r)| r[0].parse::<u32>().unwrap() * r[1].parse::<u32>().unwrap())
+        .sum();
 
     println!("{result}");
 }
 
-fn check_include(schematic: &Vec<Vec<char>>, (x, y): (usize, usize)) -> bool {
+fn get_connected_gear(
+    schematic: &Vec<Vec<char>>,
+    (x, y): (usize, usize),
+) -> Option<(usize, usize)> {
     for oy in y as isize - 1..=y as isize + 1 {
         for ox in x as isize - 1..=x as isize + 1 {
             if ox == x as isize && oy == y as isize {
@@ -48,13 +64,13 @@ fn check_include(schematic: &Vec<Vec<char>>, (x, y): (usize, usize)) -> bool {
 
             if let Some(row) = schematic.get(oy as usize) {
                 if let Some(value) = row.get(ox as usize) {
-                    if '.' != *value && !value.is_numeric() {
-                        return true;
+                    if '*' == *value {
+                        return Some((ox as usize, oy as usize));
                     }
                 }
             }
         }
     }
 
-    false
+    None
 }
