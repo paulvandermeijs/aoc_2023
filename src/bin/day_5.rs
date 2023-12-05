@@ -9,7 +9,7 @@ fn main() {
         fertilizer_water,
         soil_fertilizer,
         seed_soil,
-        seeds,
+        seed_ranges,
     ): (
         Option<Vec<(Range<u64>, u64)>>,
         Option<Vec<(Range<u64>, u64)>>,
@@ -18,7 +18,7 @@ fn main() {
         Option<Vec<(Range<u64>, u64)>>,
         Option<Vec<(Range<u64>, u64)>>,
         Option<Vec<(Range<u64>, u64)>>,
-        Vec<u64>,
+        Vec<Range<u64>>,
     ) = std::io::stdin().lines().map(|l| l.unwrap()).fold(
         (None, None, None, None, None, None, None, Vec::new()),
         |mut r, l| {
@@ -27,12 +27,16 @@ fn main() {
             }
 
             if l.starts_with("seeds:") {
-                let seeds = l.split(' ').collect::<Vec<&str>>()[1..]
+                let seed_ranges = l.split(' ').collect::<Vec<&str>>()[1..]
                     .iter()
                     .map(|v| v.parse::<u64>().unwrap())
-                    .collect::<Vec<u64>>();
+                    .collect::<Vec<u64>>()
+                    .chunks_exact(2)
+                    .into_iter()
+                    .map(|range| range[0]..range[0] + range[1])
+                    .collect::<Vec<Range<u64>>>();
 
-                r.7 = seeds;
+                r.7 = seed_ranges;
 
                 return r;
             } else if "seed-to-soil map:" == l {
@@ -106,16 +110,18 @@ fn main() {
         pos
     };
 
-    let result = seeds.into_iter().fold(std::u64::MAX, |r, s| {
-        let soil = find(&seed_soil, s);
-        let fertilizer = find(&soil_fertilizer, soil);
-        let water = find(&fertilizer_water, fertilizer);
-        let light = find(&water_light, water);
-        let temperature = find(&light_temperature, light);
-        let humidity = find(&temperature_humidity, temperature);
-        let location = find(&humidity_location, humidity);
+    let result = seed_ranges.into_iter().fold(std::u64::MAX, |r, sr| {
+        sr.into_iter().fold(r, |r, s| {
+            let soil = find(&seed_soil, s);
+            let fertilizer = find(&soil_fertilizer, soil);
+            let water = find(&fertilizer_water, fertilizer);
+            let light = find(&water_light, water);
+            let temperature = find(&light_temperature, light);
+            let humidity = find(&temperature_humidity, temperature);
+            let location = find(&humidity_location, humidity);
 
-        std::cmp::min(r, location)
+            std::cmp::min(r, location)
+        })
     });
 
     println!("{result}");
