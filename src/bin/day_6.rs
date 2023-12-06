@@ -4,11 +4,11 @@ fn main() {
         .map(|l| {
             l.unwrap().split_ascii_whitespace().collect::<Vec<&str>>()[1..]
                 .into_iter()
-                .map(|v| v.parse::<u32>().unwrap())
-                .collect::<Vec<u32>>()
+                .map(|v| v.parse::<usize>().unwrap())
+                .collect::<Vec<usize>>()
         })
-        .collect::<Vec<Vec<u32>>>();
-    let races = std::iter::zip(&races[0], &races[1]).collect::<Vec<(&u32, &u32)>>();
+        .collect::<Vec<Vec<usize>>>();
+    let races = std::iter::zip(&races[0], &races[1]).collect::<Vec<(&usize, &usize)>>();
 
     let result = races
         .into_iter()
