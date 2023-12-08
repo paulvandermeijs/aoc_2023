@@ -7,29 +7,49 @@ fn main() {
 
     lines.next();
 
-    let map = lines.map(|line| line.unwrap()).fold(
-        HashMap::<String, (String, String)>::new(),
-        |mut n, line| {
+    let (map, mut current) = lines.map(|line| line.unwrap()).fold(
+        (
+            HashMap::<String, (String, String)>::new(),
+            Vec::<(String, String)>::new(),
+        ),
+        |(mut n, mut c), line| {
             n.insert(line[0..3].into(), (line[7..10].into(), line[12..15].into()));
-            n
+
+            if 'A' == line.as_bytes()[2] as char {
+                c.push((line[7..10].into(), line[12..15].into()));
+            }
+
+            (n, c)
         },
     );
 
-    let mut current = map.get("AAA").unwrap();
     let mut result = 1;
 
     for instruction in instructions.into_iter().cycle() {
-        let node = match instruction {
-            'L' => &current.0,
-            'R' => &current.1,
-            _ => panic!("Unknown instruction"),
-        };
+        let (nodes, end) = current
+            .iter()
+            .fold((Vec::new(), true), |(mut nodes, end), current| {
+                let node = match instruction {
+                    'L' => &current.0,
+                    'R' => &current.1,
+                    _ => panic!("Unknown instruction"),
+                };
+                nodes.push(node);
 
-        if "ZZZ" == node {
+                let end = end && 'Z' == node.as_bytes()[2] as char;
+
+                (nodes, end)
+            });
+
+        if end {
             break;
         }
 
-        current = map.get(node).unwrap();
+        current = nodes
+            .into_iter()
+            .map(|node| map.get(node).unwrap().clone())
+            .collect::<Vec<(String, String)>>();
+
         result += 1;
     }
 
