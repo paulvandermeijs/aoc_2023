@@ -54,6 +54,7 @@ impl PartialEq for Hand {
 
 #[derive(Clone, Copy, Eq)]
 enum Card {
+    Joker,
     Two,
     Three,
     Four,
@@ -63,7 +64,6 @@ enum Card {
     Eight,
     Nine,
     Ten,
-    Jack,
     Queen,
     King,
     Ace,
@@ -75,7 +75,7 @@ impl From<char> for Card {
             'A' => Self::Ace,
             'K' => Self::King,
             'Q' => Self::Queen,
-            'J' => Self::Jack,
+            'J' => Self::Joker,
             'T' => Self::Ten,
             '9' => Self::Nine,
             '8' => Self::Eight,
@@ -124,17 +124,22 @@ enum HandType {
 
 impl From<&str> for HandType {
     fn from(value: &str) -> Self {
-        let mut count = value
-            .chars()
-            .into_iter()
-            .fold(HashMap::<char, u32>::new(), |mut map, ch| {
-                map.entry(ch)
-                    .and_modify(|counter| *counter += 1)
-                    .or_insert(1);
-                map
-            })
-            .into_values()
-            .collect::<Vec<u32>>();
+        let mut count =
+            value
+                .chars()
+                .into_iter()
+                .fold(HashMap::<char, u32>::new(), |mut map, ch| {
+                    map.entry(ch)
+                        .and_modify(|counter| *counter += 1)
+                        .or_insert(1);
+                    map
+                });
+
+        let joker_count = *count.get(&'J').unwrap_or(&0);
+
+        count.remove(&'J');
+
+        let mut count = count.into_values().collect::<Vec<u32>>();
 
         count.sort();
         count.reverse();
@@ -142,6 +147,8 @@ impl From<&str> for HandType {
         let mut count_padded: [u32; 5] = [0; 5];
 
         count_padded[..count.len()].copy_from_slice(&count);
+
+        count_padded[0] += joker_count;
 
         match count_padded {
             [5, _, _, _, _] => Self::FiveOfAKind,
