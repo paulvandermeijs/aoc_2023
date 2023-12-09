@@ -7,7 +7,7 @@ fn main() {
 
     lines.next();
 
-    let (map, mut current) = lines.map(|line| line.unwrap()).fold(
+    let (map, current) = lines.map(|line| line.unwrap()).fold(
         (
             HashMap::<String, (String, String)>::new(),
             Vec::<(String, String)>::new(),
@@ -23,35 +23,33 @@ fn main() {
         },
     );
 
-    let mut result = 1;
+    let result = current
+        .into_iter()
+        .map(|mut current| {
+            let mut result = 1usize;
 
-    for instruction in instructions.into_iter().cycle() {
-        let (nodes, end) = current
-            .iter()
-            .fold((Vec::new(), true), |(mut nodes, end), current| {
+            for instruction in instructions.clone().into_iter().cycle() {
                 let node = match instruction {
                     'L' => &current.0,
                     'R' => &current.1,
                     _ => panic!("Unknown instruction"),
                 };
-                nodes.push(node);
 
-                let end = end && 'Z' == node.as_bytes()[2] as char;
+                if 'Z' == node.as_bytes()[2] as char {
+                    return result;
+                }
 
-                (nodes, end)
-            });
+                current = map.get(node).unwrap().clone();
+                result += 1;
+            }
 
-        if end {
-            break;
-        }
-
-        current = nodes
-            .into_iter()
-            .map(|node| map.get(node).unwrap().clone())
-            .collect::<Vec<(String, String)>>();
-
-        result += 1;
-    }
+            0
+        })
+        .collect::<Vec<usize>>();
+    let result = result
+        .into_iter()
+        .reduce(|c, v| num::integer::lcm(c, v))
+        .unwrap();
 
     println!("{:?}", result);
 }
