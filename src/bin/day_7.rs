@@ -1,6 +1,6 @@
-use std::{cmp::Ordering, collections::HashMap};
+use std::collections::HashMap;
 
-#[derive(Debug, Eq)]
+#[derive(Debug, Eq, PartialEq, PartialOrd)]
 struct Hand {
     value: String,
     hand_type: HandType,
@@ -40,19 +40,7 @@ impl Ord for Hand {
     }
 }
 
-impl PartialOrd for Hand {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for Hand {
-    fn eq(&self, other: &Self) -> bool {
-        self == other
-    }
-}
-
-#[derive(Clone, Copy, Eq)]
+#[derive(Clone, Copy, Eq, PartialEq, PartialOrd)]
 enum Card {
     Joker,
     Two,
@@ -99,19 +87,7 @@ impl Ord for Card {
     }
 }
 
-impl PartialOrd for Card {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for Card {
-    fn eq(&self, other: &Self) -> bool {
-        self == other
-    }
-}
-
-#[derive(Copy, Clone, Debug, Eq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd)]
 enum HandType {
     HighCard,
     OnePair,
@@ -168,18 +144,6 @@ impl Ord for HandType {
         let other = *other as u8;
 
         s.cmp(&other)
-    }
-}
-
-impl PartialOrd for HandType {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for HandType {
-    fn eq(&self, other: &Self) -> bool {
-        self == other
     }
 }
 
